@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الدفاع السيبراني</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a73e8; --success: #28a745; --danger: #d93025; --bg: #f0f2f5; --card: #ffffff; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 900px; }
+        header { text-align: center; margin-bottom: 40px; }
+        header h1 { color: var(--primary); font-size: 2.2rem; }
+
+        .main-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .menu-card { background: var(--card); padding: 30px; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s; }
+        .menu-card:hover { transform: translateY(-5px); border: 2px solid var(--primary); }
+        .menu-card i { font-size: 3rem; display: block; margin-bottom: 10px; }
+
+        .content-section { display: none; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; min-height: 450px; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .back-btn { background: #eee; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; margin-bottom: 20px; font-weight: bold;}
+        #next-scen-btn { position: absolute; top: 30px; left: 30px; background-color: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; font-weight: bold; display: none; z-index: 100; }
+
+        .email-ui { border: 1px solid #ddd; border-radius: 10px; margin: 20px 0; overflow: hidden; }
+        .email-header { background: #f1f3f4; padding: 15px; border-bottom: 1px solid #ddd; }
+        .email-body { padding: 20px; background: white; }
+
+        .action-btn { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-family: 'Cairo'; }
+        .tool-input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 10px; margin: 10px 0; box-sizing: border-box; font-family: 'Cairo'; font-size: 16px;}
+        
+        .strength-bar { height: 12px; background: #eee; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0%; transition: 0.5s; }
+
+        #feedback-area { padding: 15px; border-radius: 10px; margin-top: 20px; display: none; font-weight: bold; white-space: pre-line;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header id="header-main">
+        <h1>🛡️ منصة الوعي السيبراني</h1>
+        <p>طور مهاراتك في حماية البيانات</p>
+    </header>
+
+    <div id="home-page" class="main-menu">
+        <div class="menu-card" onclick="startScenarios()">
+            <i>🧩</i>
+            <h3>القرارات السيبرانية</h3>
+        </div>
+        <div class="menu-card" onclick="showSection('password-sec')">
+            <i>🔑</i>
+            <h3>فحص كلمة المرور</h3>
+        </div>
+        <div class="menu-card" onclick="showSection('crypto-sec')">
+            <i>🔐</i>
+            <h3>التشفير (Base64)</h3>
+        </div>
+    </div>
+
+    <div id="scenarios-sec" class="content-section">
+        <button class="back-btn" onclick="showHome()">⬅ العودة</button>
+        <button id="next-scen-btn" onclick="loadNewScenario()">السيناريو التالي ⮕</button>
+
+        <h2 id="scen-title">تحميل...</h2>
+        
+        <div id="email-container" class="email-ui" style="display:none;">
+            <div class="email-header">
+                <div><strong>من:</strong> <span id="email-sender" style="color:red"></span></div>
+                <div><strong>الموضوع:</strong> <span id="email-subject"></span></div>
+            </div>
+            <div class="email-body">
+                <p id="email-content"></p>
+            </div>
+        </div>
+        <div id="ransomware-ui" style="display:none; background-color: #8b0000; color: white; padding: 30px; border-radius: 10px; font-family: 'Courier New', Courier, monospace; margin: 20px 0; text-align: center; border: 3px solid #ff0000; box-shadow: 0 0 20px rgba(255,0,0,0.5);">
+            <div style="font-size: 50px; margin-bottom: 10px;">🔒</div>
+            <h2 style="color: yellow; margin-top: 0;">Oops, Your Files Have Been Encrypted!</h2>
+            <p style="font-size: 1.1em; line-height: 1.5; text-align: left; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 5px;">
+                جميع قواعد بيانات الشركة ملفاتك المهمة مشفرة الآن بخوارزمية عسكرية.<br>
+                لا تحاول فك التشفير بنفسك وإلا ستفقد البيانات للأبد.<br><br>
+                <strong>المهلة المتبقية:</strong> <span style="color: #ff4444; font-weight: bold; font-size: 1.2em;">23:59:59</span><br>
+                <strong>المطلوب:</strong> إرسال 2.5 Bitcoin إلى المحفظة التالية:
+            </p>
+            <div style="background: white; color: black; padding: 10px; font-weight: bold; word-break: break-all; margin: 15px 0;">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</div>
+        </div>
+
+        <div id="ceo-email-ui" class="email-ui" dir="ltr" style="display:none; text-align: left; font-family: Arial, sans-serif;">
+            <div class="email-header" style="display: flex; align-items: center; gap: 15px; background: #e8f0fe; border-bottom: 2px solid #1a73e8;">
+                <div style="width: 45px; height: 45px; background-color: #333; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold;">C</div>
+                <div>
+                    <div style="font-weight: bold; color: #202124; font-size: 1.1em;">
+                        CEO <span style="font-weight: normal; color: #5f6368; font-size: 0.85em;">&lt;ceo.executive@company-mail.co&gt;</span>
+                    </div>
+                    <div style="font-size: 0.85em; color: #5f6368;">To: you, Urgent</div>
+                </div>
+            </div>
+            <div class="email-body" style="color: #333; font-size: 1.05em;">
+                <p>Are you at your desk right now?</p>
+                <p>I am in a critical meeting with prospective clients and cannot take calls. I need you to purchase 5 Apple Gift Cards ($100 each) for client presentations happening in 20 minutes.</p>
+                <p>Email me the codes immediately once you have them. I will reimburse you by the end of the day.</p>
+                <p style="margin-top: 30px; color: #666; font-size: 0.9em; border-top: 1px solid #ddd; padding-top: 10px;">
+                    Sent from my iPhone
+                </p>
+            </div>
+        </div>
+
+        <div id="paypal-phishing-ui" class="email-ui" dir="ltr" style="display:none; text-align: left; font-family: Arial, sans-serif;">
+            <div class="email-header" style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 45px; height: 45px; background-color: #003087; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold;">P</div>
+                <div>
+                    <div style="font-weight: bold; color: #202124; font-size: 1.1em;">
+                        PayPal Support <span style="font-weight: normal; color: #5f6368; font-size: 0.85em;">&lt;security@paypaI-update.net&gt;</span>
+                    </div>
+                    <div style="font-size: 0.85em; color: #5f6368;">To: me</div>
+                </div>
+            </div>
+            <div class="email-body" style="color: #333;">
+                <h3 style="margin-top: 0; font-size: 1.5em; font-weight: normal; color: #333; margin-bottom: 20px;">
+                    <span style="color: #003087; font-weight: bold;">Attention!</span> Your account will close soon!
+                </h3>
+                <p>Dear Member,</p>
+                <p>We have faced some problems with your account Please update the account .If you do not update will be Closed.</p>
+                <ol style="margin-bottom: 25px; padding-left: 40px; line-height: 1.6;">
+                    <li>Click the link below to open a secure browser window.</li>
+                    <li>Confirm that you're the owner of the account.</li>
+                </ol>
+                <a href="#" onclick="alert('⚠️ نظام الحماية: لقد حاولت الضغط على رابط يحيلك إلى نطاق وهمي (paypaI-update.net) بدلاً من paypal.com.'); return false;" style="color: #cc0000; text-decoration: none; font-size: 1.1em; font-weight: bold;">Relog in your account now</a>
+            </div>
+        </div>
+
+        <p id="scen-desc-text" style="font-size: 1.1em; line-height: 1.6;"></p>
+        
+        <p id="action-prompt" style="font-weight: bold; margin-top: 20px; display: none;">ما هو قرارك التقني؟</p>
+        <div id="scen-actions" style="display: flex; gap: 10px;"></div>
+        <div id="feedback-area"></div>
+    </div>
+
+    <div id="password-sec" class="content-section">
+        <button class="back-btn" onclick="showHome()">⬅ العودة</button>
+        <h2>🔑 فحص كلمة المرور</h2>
+        <div style="position: relative; width: 100%;">
+            <input type="password" id="pwInput" class="tool-input" onkeyup="checkPW()" placeholder="اكتب كلمة مرور لتجربتها..." style="padding-left: 45px;">
+            <button type="button" onclick="togglePassword(this)" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.5rem; padding: 0; margin: 0; box-shadow: none; width: auto; flex: none;">👁️</button>
+        </div>
+        <div class="strength-bar"><div id="pwBar" class="bar-fill"></div></div>
+        <p id="pwText" style="font-weight: bold; text-align: center; margin-top: 15px; font-size: 1.2em; color: black;">اكتب كلمة مرور...</p>
+    </div>
+
+    <div id="crypto-sec" class="content-section">
+        <button class="back-btn" onclick="showHome()">⬅ العودة</button>
+        <h2>🔐 التشفير وفك التشفير (Base64)</h2>
+        <input type="text" id="cryptoInput" class="tool-input" placeholder="أدخل النص هنا...">
+        <div style="display:flex; gap:10px;">
+            <button class="action-btn" onclick="encrypt()">تشفير 🔒</button>
+            <button class="action-btn" style="background:var(--success)" onclick="decrypt()">فك التشفير 🔓</button>
+        </div>
+        <div id="cryptoRes" style="margin-top:20px; font-weight:bold; padding:20px; background:#eee; border-radius:10px; word-break:break-all;">النتيجة ستظهر هنا...</div>
+    </div>
+</div>
+
+<script>
+    // التنقل
+    function showSection(id) {
+        document.getElementById('home-page').style.display = 'none';
+        document.getElementById('header-main').style.display = 'none';
+        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+    }
+
+    function showHome() {
+        document.getElementById('home-page').style.display = 'grid';
+        document.getElementById('header-main').style.display = 'block';
+        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+    }
+
+    // السيناريوهات
+    let currentId = 1;
+    const totalScenarios = 15;
+
+    function startScenarios() {
+        currentId = 1;
+        showSection('scenarios-sec');
+        loadNewScenario();
+    }
+
+    function loadNewScenario() {
+        const nextBtn = document.getElementById('next-scen-btn');
+        const feedback = document.getElementById('feedback-area');
+        const actions = document.getElementById('scen-actions');
+        
+        // استدعاء جميع الواجهات
+        const emailBox = document.getElementById('email-container');
+        const paypalBox = document.getElementById('paypal-phishing-ui');
+        const ransomwareBox = document.getElementById('ransomware-ui');
+        const ceoEmailBox = document.getElementById('ceo-email-ui');
+        
+        const descText = document.getElementById('scen-desc-text');
+        const actionPrompt = document.getElementById('action-prompt');
+
+        nextBtn.style.display = 'none';
+        feedback.style.display = 'none';
+        actions.style.display = 'flex';
+        actionPrompt.style.display = 'none';
+        actions.innerHTML = "جاري التحميل...";
+
+        // إخفاء جميع الواجهات افتراضياً
+        emailBox.style.display = 'none';
+        paypalBox.style.display = 'none';
+        ransomwareBox.style.display = 'none';
+        ceoEmailBox.style.display = 'none';
+        descText.style.display = 'none';
+
+        fetch(`api.php?action=get_scenario&id=${currentId}`)
+            .then(r => r.json())
+            .then(data => {
+                if(data.error) {
+                    actions.innerHTML = "🏆 أحسنت! أنهيت جميع التحديات المتاحة.";
+                    return;
+                }
+
+                document.getElementById('scen-title').innerText = `تحدي ${currentId} من ${totalScenarios}`;
+                actionPrompt.style.display = 'block';
+                
+                // توجيه العرض حسب رقم السيناريو
+                if (currentId === 3) {
+                    ransomwareBox.style.display = 'block';
+                } else if (currentId === 4) {
+                    ceoEmailBox.style.display = 'block';
+                } else if (currentId === 5) {
+                    paypalBox.style.display = 'block';
+                } else if (data.description.includes("إيميل") || data.description.includes("رسالة")) {
+                    emailBox.style.display = 'block';
+                    document.getElementById('email-sender').innerText = "system@alert-update.com";
+                    document.getElementById('email-subject').innerText = "تنبيه أمني عاجل";
+                    document.getElementById('email-content').innerText = data.description;
+                } else {
+                    descText.style.display = 'block';
+                    descText.innerText = data.description;
+                }
+
+                actions.innerHTML = "";
+                [1, 2].forEach(i => {
+                    const b = document.createElement('button');
+                    b.className = "action-btn";
+                    
+                   
+                    b.innerText = data[`option_${i}_text`];
+                    b.onclick = () => submitDec(data[`option_${i}_value`]);
+                    actions.appendChild(b);
+                });
+            });
+    }
+
+    async function submitDec(dec) {
+        const feedback = document.getElementById('feedback-area');
+        document.getElementById('scen-actions').style.display = 'none';
+        document.getElementById('action-prompt').style.display = 'none';
+        feedback.style.display = 'block';
+        feedback.innerText = "جاري الإرسال...";
+        feedback.style.background = "#fff3cd";
+        feedback.style.color = "#856404";
+
+        try {
+            const res = await fetch('api.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=submit&scenario_id=${currentId}&decision=${encodeURIComponent(dec)}`
+            });
+            const result = await res.json();
+            
+            feedback.style.background = result.is_correct ? '#d4edda' : '#f8d7da';
+            feedback.style.color = result.is_correct ? '#155724' : '#721c24';
+            feedback.innerHTML = result.is_correct ? `✅ <strong>إجابة صحيحة!</strong>\n${result.feedback_action}` : `❌ <strong>قرار خاطئ!</strong>\nالخطر المستهدف: ${result.feedback_risk}\nالإجراء الموصى به: ${result.feedback_action}`;
+            
+            if(currentId < totalScenarios) {
+                document.getElementById('next-scen-btn').style.display = 'block';
+            }
+            currentId++; 
+        } catch (e) {
+            feedback.innerText = "فشل الاتصال بالخادم.";
+            document.getElementById('scen-actions').style.display = 'flex';
+        }
+    }
+
+    // فحص كلمة المرور وإظهار/إخفاء النص
+    function togglePassword(btn) {
+        const input = document.getElementById('pwInput');
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerText = '🙈';
+        } else {
+            input.type = 'password';
+            btn.innerText = '👁️';
+        }
+    }
+
+    function checkPW() {
+        const pw = document.getElementById('pwInput').value;
+        let strength = 0;
+        
+        if (pw.length > 7) strength += 25;
+        if (pw.length > 12) strength += 25;
+        if (/[A-Z]/.test(pw)) strength += 25;
+        if (/[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw)) strength += 25;
+
+        const bar = document.getElementById('pwBar');
+        const text = document.getElementById('pwText');
+
+        bar.style.width = strength + '%';
+
+        if (pw.length === 0) {
+            bar.style.width = '0%';
+            text.innerText = "اكتب كلمة مرور...";
+            text.style.color = "black";
+        } else if (strength <= 25) { 
+            bar.style.backgroundColor = "red"; 
+            text.innerText = "ضعيفة جداً (يسهل اختراقها)"; 
+            text.style.color = "red";
+        } else if (strength <= 50) { 
+            bar.style.backgroundColor = "orange"; 
+            text.innerText = "متوسطة"; 
+            text.style.color = "orange";
+        } else if (strength <= 75) { 
+            bar.style.backgroundColor = "#17a2b8"; 
+            text.innerText = "جيدة"; 
+            text.style.color = "#17a2b8";
+        } else { 
+            bar.style.backgroundColor = "green"; 
+            text.innerText = "قوية جداً (يصعب اختراقها)"; 
+            text.style.color = "green";
+        }
+    }
+
+    // التشفير
+    function encrypt() {
+        let t = document.getElementById('cryptoInput').value;
+        if(!t) return;
+        document.getElementById('cryptoRes').innerText = btoa(unescape(encodeURIComponent(t)));
+        document.getElementById('cryptoRes').style.color = "#d93025";
+    }
+
+    function decrypt() {
+        let t = document.getElementById('cryptoRes').innerText;
+        if(!t || t === "النتيجة ستظهر هنا...") return;
+        try {
+            document.getElementById('cryptoRes').innerText = decodeURIComponent(escape(atob(t)));
+            document.getElementById('cryptoRes').style.color = "#28a745";
+        } catch(e) {
+            alert("النص الموجود غير صالح لفك التشفير!");
+        }
+    }
+</script>
+</body>
+</html>
