@@ -21,8 +21,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .back-btn { background: #eee; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; margin-bottom: 20px; font-weight: bold;}
-        #next-scen-btn { position: absolute; top: 30px; left: 30px; background-color: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; font-weight: bold; display: none; z-index: 100; }
-
         .email-ui { border: 1px solid #ddd; border-radius: 10px; margin: 20px 0; overflow: hidden; }
         .email-header { background: #f1f3f4; padding: 15px; border-bottom: 1px solid #ddd; }
         .email-body { padding: 20px; background: white; }
@@ -60,10 +58,15 @@
     </div>
 
     <div id="scenarios-sec" class="content-section">
-        <button class="back-btn" onclick="showHome()">⬅ العودة</button>
-        <button id="next-scen-btn" onclick="loadNewScenario()">السيناريو التالي ⮕</button>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div>
+                <button class="back-btn" onclick="showHome()" style="margin-bottom: 0;">⬅ العودة</button>
+                <button id="prev-scen-btn" onclick="loadPrevScenario()" class="back-btn" style="display:none; background-color: var(--primary); color: white; margin-right: 10px; margin-bottom: 0;">⬅ السؤال السابق</button>
+            </div>
+            <button id="next-scen-btn" onclick="loadNextScenario()" style="background-color: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; font-weight: bold; display: none;">السيناريو التالي ⮕</button>
+        </div>
 
-        <h2 id="scen-title">تحميل...</h2>
+        <h2 id="scen-title" style="margin-top: 0;">تحميل...</h2>
         
         <div id="email-container" class="email-ui" style="display:none;">
             <div class="email-header">
@@ -185,8 +188,23 @@
         loadNewScenario();
     }
 
+    function loadNextScenario() {
+        if (currentId < totalScenarios) {
+            currentId++;
+            loadNewScenario();
+        }
+    }
+
+    function loadPrevScenario() {
+        if (currentId > 1) {
+            currentId--;
+            loadNewScenario();
+        }
+    }
+
     function loadNewScenario() {
         const nextBtn = document.getElementById('next-scen-btn');
+        const prevBtn = document.getElementById('prev-scen-btn');
         const feedback = document.getElementById('feedback-area');
         const actions = document.getElementById('scen-actions');
         
@@ -200,6 +218,7 @@
         const actionPrompt = document.getElementById('action-prompt');
 
         nextBtn.style.display = 'none';
+        prevBtn.style.display = currentId > 1 ? 'inline-block' : 'none';
         feedback.style.display = 'none';
         actions.style.display = 'flex';
         actionPrompt.style.display = 'none';
@@ -255,8 +274,14 @@
 
     async function submitDec(dec) {
         const feedback = document.getElementById('feedback-area');
-        document.getElementById('scen-actions').style.display = 'none';
-        document.getElementById('action-prompt').style.display = 'none';
+        
+        const actionBtns = document.querySelectorAll('#scen-actions .action-btn');
+        actionBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        });
+
         feedback.style.display = 'block';
         feedback.innerText = "جاري الإرسال...";
         feedback.style.background = "#fff3cd";
@@ -277,10 +302,14 @@
             if(currentId < totalScenarios) {
                 document.getElementById('next-scen-btn').style.display = 'block';
             }
-            currentId++; 
         } catch (e) {
             feedback.innerText = "فشل الاتصال بالخادم.";
-            document.getElementById('scen-actions').style.display = 'flex';
+            const actionBtns = document.querySelectorAll('#scen-actions .action-btn');
+            actionBtns.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            });
         }
     }
 
