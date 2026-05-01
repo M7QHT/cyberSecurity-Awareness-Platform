@@ -188,7 +188,7 @@
             </div>
             <div class="menu-card" onclick="showSection('crypto-sec')">
                 <i>🔐</i>
-                <h3>التشفير (Base64)</h3>
+                <h3>التشفير (AES)</h3>
             </div>
         </div>
 
@@ -607,9 +607,9 @@
         }
 
         function decrypt() {
-            let text = document.getElementById('cryptoRes').innerText;
+            let text = document.getElementById('cryptoInput').value;
             let key = document.getElementById('cryptoKey').value;
-            if (!text || text === "النتيجة ستظهر هنا..." || !key) return;
+            if (!text || !key) { alert("يجب إدخال النص والمفتاح السري!"); return; }
 
             try {
                 let decrypted = CryptoJS.AES.decrypt(text, key).toString(CryptoJS.enc.Utf8);
