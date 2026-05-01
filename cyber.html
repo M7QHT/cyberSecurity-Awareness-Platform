@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة الدفاع السيبراني</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         :root {
             --primary: #1a73e8;
@@ -314,12 +315,26 @@
             <p id="pwText"
                 style="font-weight: bold; text-align: center; margin-top: 15px; font-size: 1.2em; color: black;">اكتب
                 كلمة مرور...</p>
+
+            <div id="pwChecklist"
+                style="margin-top: 20px; text-align: right; background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
+                <h4 style="margin-top: 0; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 5px;">✅ معايير قوة
+                    كلمة المرور:</h4>
+                <ul style="list-style: none; padding: 0; margin: 10px 0 0 0; line-height: 1.8;">
+                    <li id="check-len8" style="color: red;">❌ 8 خانات على الأقل</li>
+                    <li id="check-len12" style="color: red;">❌ 12 خانة (أمان إضافي)</li>
+                    <li id="check-upper" style="color: red;">❌ حرف كبير واحد على الأقل</li>
+                    <li id="check-numspec" style="color: red;">❌ رقم ورمز خاص معاً</li>
+                </ul>
+            </div>
         </div>
 
         <div id="crypto-sec" class="content-section">
             <button class="back-btn" onclick="showHome()">⬅ العودة</button>
-            <h2>🔐 التشفير وفك التشفير (Base64)</h2>
+            <h2>🔐 التشفير المتماثل (AES)</h2>
             <input type="text" id="cryptoInput" class="tool-input" placeholder="أدخل النص هنا...">
+            <input type="password" id="cryptoKey" class="tool-input"
+                placeholder="أدخل مفتاح التشفير السري (Secret Key)...">
             <div style="display:flex; gap:10px;">
                 <button class="action-btn" onclick="encrypt()">تشفير 🔒</button>
                 <button class="action-btn" style="background:var(--success)" onclick="decrypt()">فك التشفير 🔓</button>
@@ -347,19 +362,20 @@
 
         // السيناريوهات
         let currentId = 1;
-        const totalScenarios = 15;
+        let totalScenarios = 1;
+        let userResults = {}; // متغير جديد لحفظ الإجابات
 
         function startScenarios() {
             currentId = 1;
+            userResults = {}; // تصفير النتائج السابقة
             showSection('scenarios-sec');
             loadNewScenario();
         }
 
         function loadNextScenario() {
-            if (currentId < totalScenarios) {
-                currentId++;
-                loadNewScenario();
-            }
+            // نزيد المعرف دائماً حتى لو كان الأخير ليقوم بطلب السيناريو التالي فيظهر الخطأ وتظهر النتيجة
+            currentId++;
+            loadNewScenario();
         }
 
         function loadPrevScenario() {
@@ -402,9 +418,27 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.error) {
-                        actions.innerHTML = "🏆 أحسنت! أنهيت جميع التحديات المتاحة.";
+                        // حساب عدد الإجابات الصحيحة
+                        let correctAnswers = Object.values(userResults).filter(v => v).length;
+                        let scorePercentage = Math.round((correctAnswers / totalScenarios) * 100);
+
+                        let resultMessage = `<div style="text-align:center; width:100%;">
+                            <h3 style="color:var(--primary);">🏆 اكتمل التقييم!</h3>
+                            <p style="font-size:1.2em;">لقد أجبت بشكل صحيح على <strong>${correctAnswers}</strong> من أصل <strong>${totalScenarios}</strong> تحديات.</p>
+                            <p style="font-size:1.5em; color:${scorePercentage >= 60 ? 'green' : 'red'};">نسبة وعيك السيبراني: ${scorePercentage}%</p>
+                        </div>`;
+
+                        actions.innerHTML = resultMessage;
+
+                        // إخفاء العناصر غير الضرورية في صفحة النتيجة
+                        document.getElementById('scen-title').innerText = "النتيجة النهائية";
+                        actionPrompt.style.display = 'none';
+                        document.getElementById('next-scen-btn').style.display = 'none';
                         return;
                     }
+
+                    // تحديث العدد الإجمالي ديناميكياً
+                    totalScenarios = data.total_scenarios;
 
                     document.getElementById('scen-title').innerText = `تحدي ${currentId} من ${totalScenarios}`;
                     actionPrompt.style.display = 'block';
@@ -463,13 +497,20 @@
                 });
                 const result = await res.json();
 
+                // حفظ نتيجة السؤال (true أو false)
+                userResults[currentId] = result.is_correct;
+
                 feedback.style.background = result.is_correct ? '#d4edda' : '#f8d7da';
                 feedback.style.color = result.is_correct ? '#155724' : '#721c24';
                 feedback.innerHTML = result.is_correct ? `✅ <strong>إجابة صحيحة!</strong>\n${result.feedback_action}` : `❌ <strong>قرار خاطئ!</strong>\nالخطر المستهدف: ${result.feedback_risk}\nالإجراء الموصى به: ${result.feedback_action}`;
 
+                const nextBtn = document.getElementById('next-scen-btn');
                 if (currentId < totalScenarios) {
-                    document.getElementById('next-scen-btn').style.display = 'block';
+                    nextBtn.innerText = "السيناريو التالي ⮕";
+                } else {
+                    nextBtn.innerText = "عرض النتيجة النهائية 🏆";
                 }
+                nextBtn.style.display = 'block';
 
                 actionBtns.forEach(btn => {
                     btn.disabled = false;
@@ -502,10 +543,21 @@
             const pw = document.getElementById('pwInput').value;
             let strength = 0;
 
-            if (pw.length > 7) strength += 25;
-            if (pw.length > 12) strength += 25;
-            if (/[A-Z]/.test(pw)) strength += 25;
-            if (/[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw)) strength += 25;
+            const c1 = pw.length > 7;
+            const c2 = pw.length > 12;
+            const c3 = /[A-Z]/.test(pw);
+            const c4 = /[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw);
+
+            if (c1) strength += 25;
+            if (c2) strength += 25;
+            if (c3) strength += 25;
+            if (c4) strength += 25;
+
+            // تحديث التشيك ليست بناءً على الشروط
+            updateCheck('check-len8', c1, "8 خانات على الأقل");
+            updateCheck('check-len12', c2, "12 خانة (أمان إضافي)");
+            updateCheck('check-upper', c3, "حرف كبير واحد على الأقل");
+            updateCheck('check-numspec', c4, "رقم ورمز خاص معاً");
 
             const bar = document.getElementById('pwBar');
             const text = document.getElementById('pwText');
@@ -535,22 +587,37 @@
             }
         }
 
-        // التشفير
+        function updateCheck(id, isMet, label) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = (isMet ? "✅ " : "❌ ") + label;
+            el.style.color = isMet ? "green" : "red";
+            el.style.fontWeight = isMet ? "bold" : "normal";
+        }
+
+        // التشفير المتماثل (AES)
         function encrypt() {
-            let t = document.getElementById('cryptoInput').value;
-            if (!t) return;
-            document.getElementById('cryptoRes').innerText = btoa(unescape(encodeURIComponent(t)));
+            let text = document.getElementById('cryptoInput').value;
+            let key = document.getElementById('cryptoKey').value;
+            if (!text || !key) { alert("يجب إدخال النص والمفتاح السري!"); return; }
+
+            let encrypted = CryptoJS.AES.encrypt(text, key).toString();
+            document.getElementById('cryptoRes').innerText = encrypted;
             document.getElementById('cryptoRes').style.color = "#d93025";
         }
 
         function decrypt() {
-            let t = document.getElementById('cryptoRes').innerText;
-            if (!t || t === "النتيجة ستظهر هنا...") return;
+            let text = document.getElementById('cryptoRes').innerText;
+            let key = document.getElementById('cryptoKey').value;
+            if (!text || text === "النتيجة ستظهر هنا..." || !key) return;
+
             try {
-                document.getElementById('cryptoRes').innerText = decodeURIComponent(escape(atob(t)));
+                let decrypted = CryptoJS.AES.decrypt(text, key).toString(CryptoJS.enc.Utf8);
+                if (!decrypted) throw new Error();
+                document.getElementById('cryptoRes').innerText = decrypted;
                 document.getElementById('cryptoRes').style.color = "#28a745";
             } catch (e) {
-                alert("النص الموجود غير صالح لفك التشفير!");
+                alert("فشل فك التشفير: إما أن النص غير مشفر أو المفتاح السري خاطئ.");
             }
         }
     </script>
