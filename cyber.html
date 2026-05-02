@@ -544,7 +544,7 @@
             let strength = 0;
 
             const c1 = pw.length > 7;
-            const c2 = pw.length > 12;
+            const c2 = pw.length >= 12;
             const c3 = /[A-Z]/.test(pw);
             const c4 = /[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw);
 
