@@ -346,82 +346,98 @@
     </div>
 
     <script>
-        // التنقل
+        // ---------------- التنقل بين صفحات الموقع ----------------
+        // دالة لإظهار قسم معين (مثل صفحة التشفير أو الباسورد) وإخفاء الباقي
         function showSection(id) {
+            // إخفاء الصفحة الرئيسية والترويسة العلوية (الهيدر)
             document.getElementById('home-page').style.display = 'none';
             document.getElementById('header-main').style.display = 'none';
+            // إخفاء كل الأقسام الأخرى لضمان أن قسماً واحداً فقط يظهر
             document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+            // إظهار القسم المطلوب عن طريق معرفه (id)
             document.getElementById(id).style.display = 'block';
         }
 
+        // دالة للعودة إلى الصفحة الرئيسية
         function showHome() {
+            // إعادة إظهار الصفحة الرئيسية (كشبكة grid) والترويسة
             document.getElementById('home-page').style.display = 'grid';
             document.getElementById('header-main').style.display = 'block';
+            // إخفاء أي قسم كان مفتوحاً (تشفير، سيناريوهات، إلخ)
             document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
         }
 
-        // السيناريوهات
-        let currentId = 1;
-        let totalScenarios = 1;
-        let userResults = {}; // متغير جديد لحفظ الإجابات
+        // ---------------- متغيرات ودوال لعبة السيناريوهات ----------------
+        let currentId = 1; // يحفظ رقم التحدي (السيناريو) الحالي الذي يراه المستخدم
+        let totalScenarios = 1; // يحفظ العدد الإجمالي للتحديات في قاعدة البيانات
+        let userResults = {}; // متغير (قاموس) لحفظ إجابات المستخدم، لتحديد النتيجة لاحقاً
 
+        // دالة تبدأ تشغيل لعبة التحديات من البداية
         function startScenarios() {
-            currentId = 1;
-            userResults = {}; // تصفير النتائج السابقة
-            showSection('scenarios-sec');
-            loadNewScenario();
+            currentId = 1; // الرجوع للتحدي الأول
+            userResults = {}; // تصفير ومسح النتائج السابقة لتبدأ اللعبة من جديد
+            showSection('scenarios-sec'); // الانتقال لصفحة السيناريوهات
+            loadNewScenario(); // تحميل وعرض بيانات التحدي الأول
         }
 
+        // دالة الانتقال للتحدي التالي
         function loadNextScenario() {
-            // نزيد المعرف دائماً حتى لو كان الأخير ليقوم بطلب السيناريو التالي فيظهر الخطأ وتظهر النتيجة
+            // نزيد المعرف دائماً، حتى لو كان التحدي الأخير لكي يقوم بطلب جديد فيظهر الخطأ (لا يوجد سيناريو) وتظهر صفحة النتيجة
             currentId++;
-            loadNewScenario();
+            loadNewScenario(); // تحميل السيناريو الجديد بناءً على المعرف الجديد
         }
 
+        // دالة العودة للتحدي السابق (إذا أراد المستخدم مراجعة سؤاله)
         function loadPrevScenario() {
-            if (currentId > 1) {
-                currentId--;
-                loadNewScenario();
+            if (currentId > 1) { // التأكد من أننا لسنا في التحدي الأول
+                currentId--; // العودة خطوة للوراء
+                loadNewScenario(); // تحميل بيانات التحدي
             }
         }
 
+        // دالة جلب سيناريو (تحدي) جديد من قاعدة البيانات وعرضه
         function loadNewScenario() {
+            // جلب الأزرار وأماكن العرض من واجهة المستخدم
             const nextBtn = document.getElementById('next-scen-btn');
             const prevBtn = document.getElementById('prev-scen-btn');
             const feedback = document.getElementById('feedback-area');
             const actions = document.getElementById('scen-actions');
 
-            // استدعاء جميع الواجهات
+            // جلب القوالب الجاهزة للأشكال المختلفة للسيناريوهات (إيميل، صفحة فدية، إلخ)
             const emailBox = document.getElementById('email-container');
             const paypalBox = document.getElementById('paypal-phishing-ui');
             const ransomwareBox = document.getElementById('ransomware-ui');
             const ceoEmailBox = document.getElementById('ceo-email-ui');
-
             const descText = document.getElementById('scen-desc-text');
             const actionPrompt = document.getElementById('action-prompt');
 
+            // إخفاء الأزرار وبعض المكونات لتجهيز الصفحة للسؤال الجديد
             nextBtn.style.display = 'none';
-            prevBtn.style.display = currentId > 1 ? 'inline-block' : 'none';
-            feedback.style.display = 'none';
+            prevBtn.style.display = currentId > 1 ? 'inline-block' : 'none'; // يظهر زر السابق فقط إذا تخطينا السؤال الأول
+            feedback.style.display = 'none'; // إخفاء التغذية الراجعة
             actions.style.display = 'flex';
             actionPrompt.style.display = 'none';
-            actions.innerHTML = "جاري التحميل...";
+            actions.innerHTML = "جاري التحميل..."; // رسالة انتظار
 
-            // إخفاء جميع الواجهات افتراضياً
+            // إخفاء جميع الواجهات الرسومية افتراضياً (سيتم إظهار المناسب لاحقاً)
             emailBox.style.display = 'none';
             paypalBox.style.display = 'none';
             ransomwareBox.style.display = 'none';
             ceoEmailBox.style.display = 'none';
             descText.style.display = 'none';
 
+            // طلب البيانات من الخادم (Server) باستخدام واجهة البرمجة (API)
             fetch(`api.php?action=get_scenario&id=${currentId}`)
-                .then(r => r.json())
+                .then(r => r.json()) // تحويل الرد إلى بيانات JSON مفهومة
                 .then(data => {
+                    // إذا أرجع الخادم "خطأ" (مثل الوصول لنهاية الأسئلة)، نظهر شاشة النتيجة النهائية
                     if (data.error) {
-                        // حساب عدد الإجابات الصحيحة
+                        // حساب عدد الإجابات الصحيحة من خلال تصفية القاموس (userResults)
                         let correctAnswers = Object.values(userResults).filter(v => v).length;
+                        // حساب النسبة المئوية للنتيجة
                         let scorePercentage = Math.round((correctAnswers / totalScenarios) * 100);
 
+                        // إنشاء الرسالة النهائية للنتيجة وتلوينها (أخضر للنجاح وأحمر للرسوب)
                         let resultMessage = `<div style="text-align:center; width:100%;">
                             <h3 style="color:var(--primary);">🏆 اكتمل التقييم!</h3>
                             <p style="font-size:1.2em;">لقد أجبت بشكل صحيح على <strong>${correctAnswers}</strong> من أصل <strong>${totalScenarios}</strong> تحديات.</p>
@@ -430,53 +446,62 @@
 
                         actions.innerHTML = resultMessage;
 
-                        // إخفاء العناصر غير الضرورية في صفحة النتيجة
+                        // إخفاء العناصر غير الضرورية في صفحة النتيجة (مثل عنوان السؤال وزر التالي)
                         document.getElementById('scen-title').innerText = "النتيجة النهائية";
                         actionPrompt.style.display = 'none';
                         document.getElementById('next-scen-btn').style.display = 'none';
-                        return;
+                        return; // الخروج من الدالة لأن الأسئلة انتهت
                     }
 
-                    // تحديث العدد الإجمالي ديناميكياً
+                    // تحديث العدد الإجمالي للسيناريوهات من البيانات القادمة من الخادم
                     totalScenarios = data.total_scenarios;
 
+                    // تحديث عنوان التحدي (مثال: تحدي 2 من 5)
                     document.getElementById('scen-title').innerText = `تحدي ${currentId} من ${totalScenarios}`;
                     actionPrompt.style.display = 'block';
 
-                    // توجيه العرض حسب رقم السيناريو
+                    // توجيه وعرض التصميم المناسب بناءً على رقم التحدي أو محتوى السؤال
                     if (currentId === 3) {
-                        ransomwareBox.style.display = 'block';
+                        ransomwareBox.style.display = 'block'; // إظهار شاشة فيروس الفدية
                     } else if (currentId === 4) {
-                        ceoEmailBox.style.display = 'block';
+                        ceoEmailBox.style.display = 'block'; // إظهار إيميل المدير المزيف
                     } else if (currentId === 5) {
-                        paypalBox.style.display = 'block';
+                        paypalBox.style.display = 'block'; // إظهار إيميل التصيد لباي بال
                     } else if (data.description.includes("إيميل") || data.description.includes("رسالة")) {
+                        // إظهار واجهة الإيميل العادي
                         emailBox.style.display = 'block';
                         document.getElementById('email-sender').innerText = "system@alert-update.com";
                         document.getElementById('email-subject').innerText = "تنبيه أمني عاجل";
                         document.getElementById('email-content').innerText = data.description;
                     } else {
+                        // إظهار النص فقط للسيناريوهات التي ليس لها واجهة رسومية خاصة
                         descText.style.display = 'block';
                         descText.innerText = data.description;
                     }
 
+                    // تجهيز أزرار الخيارات (الإجابات)
                     actions.innerHTML = "";
                     const options = [1, 2];
+                    // خلط أماكن الأزرار بشكل عشوائي لكي لا يكون الجواب دائماً في نفس المكان
                     if (Math.random() > 0.5) options.reverse();
 
+                    // إنشاء الأزرار بناءً على الخيارات المرسلة من الخادم
                     options.forEach(i => {
-                        const b = document.createElement('button');
-                        b.className = "action-btn";
-                        b.innerText = data[`option_${i}_text`];
+                        const b = document.createElement('button'); // صنع زر جديد
+                        b.className = "action-btn"; // إضافة التصميم
+                        b.innerText = data[`option_${i}_text`]; // كتابة نص الزر
+                        // ربط الزر بدالة الإرسال ليقوم بطلب التقييم عند الضغط عليه
                         b.onclick = () => submitDec(data[`option_${i}_value`]);
-                        actions.appendChild(b);
+                        actions.appendChild(b); // إضافته للصفحة
                     });
                 });
         }
 
+        // دالة يتم استدعاؤها عندما يضغط المستخدم على أحد خيارات السيناريو (يقوم بإرسال قراره للخادم للتقييم)
         async function submitDec(dec) {
-            const feedback = document.getElementById('feedback-area');
+            const feedback = document.getElementById('feedback-area'); // المكان الذي ستظهر فيه النتيجة
 
+            // جلب أزرار الخيارات وتعطيلها لمنع المستخدم من النقر مرتين متتاليتين
             const actionBtns = document.querySelectorAll('#scen-actions .action-btn');
             actionBtns.forEach(btn => {
                 btn.disabled = true;
@@ -484,40 +509,48 @@
                 btn.style.cursor = 'not-allowed';
             });
 
+            // إظهار رسالة انتظار صفراء
             feedback.style.display = 'block';
             feedback.innerText = "جاري الإرسال...";
             feedback.style.background = "#fff3cd";
             feedback.style.color = "#856404";
 
             try {
+                // إرسال قرار المستخدم (dec) ومعرف السيناريو (currentId) إلى الخادم باستخدام POST
                 const res = await fetch('api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: `action=submit&scenario_id=${currentId}&decision=${encodeURIComponent(dec)}`
                 });
-                const result = await res.json();
+                const result = await res.json(); // استلام نتيجة التقييم من الخادم
 
-                // حفظ نتيجة السؤال (true أو false)
+                // حفظ نتيجة السؤال للمستخدم (إذا كانت الإجابة صحيحة True أم خاطئة False) لاستخدامها في النتيجة النهائية
                 userResults[currentId] = result.is_correct;
 
+                // تلوين مربع النتيجة: أخضر للإجابة الصحيحة، أحمر للخاطئة
                 feedback.style.background = result.is_correct ? '#d4edda' : '#f8d7da';
                 feedback.style.color = result.is_correct ? '#155724' : '#721c24';
+                
+                // كتابة التغذية الراجعة التي تشرح للمستخدم سبب كون إجابته صحيحة أو خاطئة (وهي مستوردة من قاعدة البيانات)
                 feedback.innerHTML = result.is_correct ? `✅ <strong>إجابة صحيحة!</strong>\n${result.feedback_action}` : `❌ <strong>قرار خاطئ!</strong>\nالخطر المستهدف: ${result.feedback_risk}\nالإجراء الموصى به: ${result.feedback_action}`;
 
+                // تجهيز زر الانتقال للسؤال التالي
                 const nextBtn = document.getElementById('next-scen-btn');
                 if (currentId < totalScenarios) {
-                    nextBtn.innerText = "السيناريو التالي ⮕";
+                    nextBtn.innerText = "السيناريو التالي ⮕"; // إذا كان هناك المزيد من الأسئلة
                 } else {
-                    nextBtn.innerText = "عرض النتيجة النهائية 🏆";
+                    nextBtn.innerText = "عرض النتيجة النهائية 🏆"; // إذا كان هذا آخر سؤال
                 }
-                nextBtn.style.display = 'block';
+                nextBtn.style.display = 'block'; // إظهار زر التالي
 
+                // إعادة تفعيل الأزرار (في حال أراد المستخدم النقر مجدداً قبل الانتقال - رغم أن التصميم لا يتطلب ذلك عادةً)
                 actionBtns.forEach(btn => {
                     btn.disabled = false;
                     btn.style.opacity = '1';
                     btn.style.cursor = 'pointer';
                 });
             } catch (e) {
+                // في حال انقطع الاتصال بالإنترنت أو تعطل الخادم
                 feedback.innerText = "فشل الاتصال بالخادم.";
                 actionBtns.forEach(btn => {
                     btn.disabled = false;
@@ -527,96 +560,142 @@
             }
         }
 
-        // فحص كلمة المرور وإظهار/إخفاء النص
+        // دالة لإظهار أو إخفاء كلمة المرور عند الضغط على زر العين
         function togglePassword(btn) {
+            // جلب حقل إدخال كلمة المرور من الصفحة
             const input = document.getElementById('pwInput');
+            
+            // التحقق مما إذا كان نوع الحقل هو "كلمة سر" (مخفي)
             if (input.type === 'password') {
+                // تغييره إلى نص عادي ليتمكن المستخدم من رؤيته
                 input.type = 'text';
+                // تغيير شكل الزر ليدل على أنه يمكن إخفاء النص الآن
                 btn.innerText = '🙈';
             } else {
+                // إرجاع نوع الحقل إلى "كلمة سر" لإخفائه بنقاط
                 input.type = 'password';
+                // تغيير شكل الزر ليدل على أنه يمكن إظهار النص
                 btn.innerText = '👁️';
             }
         }
 
+        // دالة تفحص قوة كلمة المرور خطوة بخطوة
         function checkPW() {
+            // أخذ الكلمة التي أدخلها المستخدم
             const pw = document.getElementById('pwInput').value;
+            // متغير لتخزين نسبة قوة الكلمة (يبدأ من 0)
             let strength = 0;
 
-            const c1 = pw.length > 7;
-            const c2 = pw.length >= 12;
-            const c3 = /[A-Z]/.test(pw);
+            // الشروط المطلوبة لقوة الكلمة (كل شرط يضيف قوة)
+            const c1 = pw.length > 7; // هل الكلمة أطول من 7 حروف؟ (8 على الأقل)
+            const c2 = pw.length >= 12; // هل الكلمة تتكون من 12 حرفاً أو أكثر؟ (أمان إضافي)
+            const c3 = /[A-Z]/.test(pw); // هل الكلمة تحتوي على حرف إنجليزي كبير (مثل A, B, C)؟
+            // هل الكلمة تحتوي على رقم وأيضاً تحتوي على رمز خاص (مثل @, #, $)؟
             const c4 = /[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw);
 
+            // إذا تحقق الشرط الأول، نضيف 25 نقطة للقوة
             if (c1) strength += 25;
+            // إذا تحقق الشرط الثاني، نضيف 25 نقطة
             if (c2) strength += 25;
+            // إذا تحقق الشرط الثالث، نضيف 25 نقطة
             if (c3) strength += 25;
+            // إذا تحقق الشرط الرابع، نضيف 25 نقطة (الحد الأقصى 100)
             if (c4) strength += 25;
 
-            // تحديث التشيك ليست بناءً على الشروط
+            // تحديث قائمة الشروط الظاهرة للمستخدم بعلامة (صح) أو (خطأ)
             updateCheck('check-len8', c1, "8 خانات على الأقل");
             updateCheck('check-len12', c2, "12 خانة (أمان إضافي)");
             updateCheck('check-upper', c3, "حرف كبير واحد على الأقل");
             updateCheck('check-numspec', c4, "رقم ورمز خاص معاً");
 
+            // جلب الشريط الملون والنص الذي يظهر أسفل الحقل
             const bar = document.getElementById('pwBar');
             const text = document.getElementById('pwText');
 
+            // تغيير عرض الشريط الملون ليمثل النسبة (مثلاً 50% أو 100%)
             bar.style.width = strength + '%';
 
+            // إذا كان الحقل فارغاً تماماً
             if (pw.length === 0) {
                 bar.style.width = '0%';
                 text.innerText = "اكتب كلمة مرور...";
                 text.style.color = "black";
+            // إذا كانت القوة 25% أو أقل (فقط تحقق شرط واحد)
             } else if (strength <= 25) {
-                bar.style.backgroundColor = "red";
+                bar.style.backgroundColor = "red"; // لون أحمر للتنبيه
                 text.innerText = "ضعيفة جداً (يسهل اختراقها)";
                 text.style.color = "red";
+            // إذا كانت القوة 50% (تحقق شرطان)
             } else if (strength <= 50) {
-                bar.style.backgroundColor = "orange";
+                bar.style.backgroundColor = "orange"; // لون برتقالي
                 text.innerText = "متوسطة";
                 text.style.color = "orange";
+            // إذا كانت القوة 75% (تحققت 3 شروط)
             } else if (strength <= 75) {
-                bar.style.backgroundColor = "#17a2b8";
+                bar.style.backgroundColor = "#17a2b8"; // لون أزرق فاتح
                 text.innerText = "جيدة";
                 text.style.color = "#17a2b8";
+            // إذا تحققت جميع الشروط وحصلنا على 100%
             } else {
-                bar.style.backgroundColor = "green";
+                bar.style.backgroundColor = "green"; // لون أخضر
                 text.innerText = "قوية جداً (يصعب اختراقها)";
                 text.style.color = "green";
             }
         }
 
+        // دالة مساعدة لتحديث قائمة فحص الباسورد (تضع علامة صح أو خطأ وتلون النص)
         function updateCheck(id, isMet, label) {
+            // البحث عن العنصر في القائمة باستخدام الآي دي (مثل check-len8)
             const el = document.getElementById(id);
-            if (!el) return;
+            if (!el) return; // إذا لم يجد العنصر يتجاهل الأمر
+            // تغيير النص ليكون إما ✅ أو ❌ مع الجملة التوضيحية
             el.innerHTML = (isMet ? "✅ " : "❌ ") + label;
+            // تغيير لون النص: أخضر إذا تحقق الشرط، أحمر إذا لم يتحقق
             el.style.color = isMet ? "green" : "red";
+            // جعل الخط عريضاً إذا تحقق الشرط
             el.style.fontWeight = isMet ? "bold" : "normal";
         }
 
-        // التشفير المتماثل (AES)
+        // ---------------- التشفير المتماثل (AES) ----------------
+        
+        // دالة لتشفير أي نص مدخل (تحويله لطلاسم لا تفهم)
         function encrypt() {
+            // جلب النص العادي من الحقل الأول
             let text = document.getElementById('cryptoInput').value;
+            // جلب المفتاح السري (كأنه كلمة سر للقفل) من الحقل الثاني
             let key = document.getElementById('cryptoKey').value;
+            
+            // التأكد من أن المستخدم أدخل النص والمفتاح السري
             if (!text || !key) { alert("يجب إدخال النص والمفتاح السري!"); return; }
 
+            // استخدام مكتبة CryptoJS لتشفير النص باستخدام المفتاح السري، ثم تحويل الناتج إلى نص مقروء
             let encrypted = CryptoJS.AES.encrypt(text, key).toString();
+            // عرض النص المشفر باللون الأحمر في مربع النتيجة
             document.getElementById('cryptoRes').innerText = encrypted;
             document.getElementById('cryptoRes').style.color = "#d93025";
         }
 
+        // دالة لفك التشفير (إرجاع الطلاسم لنص طبيعي)
         function decrypt() {
+            // جلب النص المشفر من الحقل الأول
             let text = document.getElementById('cryptoInput').value;
+            // جلب المفتاح السري (الذي يجب أن يكون نفس المفتاح المستخدم في التشفير)
             let key = document.getElementById('cryptoKey').value;
+            
+            // التأكد من وجود مدخلات
             if (!text || !key) { alert("يجب إدخال النص والمفتاح السري!"); return; }
 
             try {
+                // محاولة فك التشفير باستخدام المفتاح السري وتحويله من صيغة أرقام لنص مفهوم (Utf8)
                 let decrypted = CryptoJS.AES.decrypt(text, key).toString(CryptoJS.enc.Utf8);
+                // إذا كان الناتج فارغاً فهذا يعني فشل العملية
                 if (!decrypted) throw new Error();
+                
+                // عرض النص العادي باللون الأخضر في مربع النتيجة إذا نجح الأمر
                 document.getElementById('cryptoRes').innerText = decrypted;
                 document.getElementById('cryptoRes').style.color = "#28a745";
             } catch (e) {
+                // في حال فشل فك التشفير (بسبب نص غير مشفر أو مفتاح خاطئ)، يظهر تنبيه للمستخدم
                 alert("فشل فك التشفير: إما أن النص غير مشفر أو المفتاح السري خاطئ.");
             }
         }
